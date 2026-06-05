@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}대시보드 — 최근 7일 리서치{% endblock %}
+
+{% block content %}
+<section class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-icon">📋</span>
+        <div class="stat-number">{{ stats.total }}</div>
+        <div class="stat-label">총 레포트</div>
+    </div>
+    <div class="stat-card highlight">
+        <span class="stat-icon">🆕</span>
+        <div class="stat-number">{{ stats.today }}</div>
+        <div class="stat-label">오늘 수집</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon">📅</span>
+        <div class="stat-number">{{ stats.week }}</div>
+        <div class="stat-label">최근 7일</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon">🏢</span>
+        <div class="stat-number">{{ stats.by_firm | length }}</div>
+        <div class="stat-label">증권사 수</div>
+    </div>
+</section>
+
+<section class="filter-bar card">
+    <form method="GET" action="/" class="filter-form">
+        <div class="filter-group">
+            <label>종목 검색</label>
+            <input type="text" name="q" value="{{ keyword }}"
+                   placeholder="삼성전자, SK하이닉스 ..." class="input-text">
+        </div>
+        <div class="filter-group">
+            <label>증권사</label>
+            <select name="firm" class="input-select">
+                {% for f in firms %}
+                <option value="{{ f }}"
+                    {% if f == selected_firm %}selected{% endif %}>{{ f }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn-primary">적용</button>
+        <a href="/" class="btn-secondary">초기화</a>
+    </form>
+</section>
+
+<section class="table-section card">
+    <div class="table-header">
+        <h2>최근 7일 레포트
+            <span class="badge-count">{{ total }}건</span>
+        </h2>
+    </div>
+
+    {% if reports %}
+    <div class="table-wrapper">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>종목명</th>
+                    <th>레포트 제목</th>
+                    <th>증권사</th>
+                    <th>투자의견</th>
+                    <th>목표주가</th>
+                    <th>발행일</th>
+                    <th>원문</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reports %}
+                <tr>
+                    <td class="td-stock">{{ r.stock_name }}</td>
+                    <td class="td-title">{{ r.title }}</td>
+                    <td class="td-firm">
+                        <span class="firm-tag">{{ r.firm }}</span>
+                    </td>
+                    <td>
+                        {% if r.opinion %}
+                            {% if '매수' in r.opinion or 'BUY' in r.opinion %}
+                                <span class="opinion buy">{{ r.opinion }}</span>
+                            {% elif '중립' in r.opinion %}
+                                <span class="opinion hold">{{ r.opinion }}</span>
+                            {% else %}
+                                <span class="opinion neutral">{{ r.opinion }}</span>
+                            {% endif %}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="td-price">{{ r.target_price or '—' }}</td>
+                    <td class="td-date">{{ r.pub_date }}</td>
+                    <td>
+                        {% if r.download_url %}
+                            <a href="{{ r.download_url }}" target="_blank"
+                               class="link-download" rel="noopener">📄</a>
+                        {% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="?page={{ current_page - 1 }}&q={{ keyword }}&firm={{ selected_firm }}"
+               class="page-btn">‹ 이전</a>
+        {% endif %}
+        {% for p in range([1, current_page - 2] | max,
+                          [total_pages + 1, current_page + 3] | min) %}
+            <a href="?page={{ p }}&q={{ keyword }}&firm={{ selected_firm }}"
+               class="page-btn {% if p == current_page %}active{% endif %}">{{ p }}</a>
+        {% endfor %}
+        {% if current_page < total_pages %}
+            <a href="?page={{ current_page + 1 }}&q={{ keyword }}&firm={{ selected_firm }}"
+               class="page-btn">다음 ›</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <p>📭 조건에 맞는 레포트가 없습니다.</p>
+        <p><small>상단의 🔄 지금 수집 버튼으로 데이터를 수집하거나 필터를 초기화하세요.</small></p>
+    </div>
+    {% endif %}
+</section>
+
+{% if stats.by_firm %}
+<section class="card">
+    <h2>📊 최근 7일 증권사별 레포트 수</h2>
+    <div class="firm-bars">
+        {% set max_cnt = stats.by_firm[0].cnt %}
+        {% for item in stats.by_firm %}
+        <div class="firm-bar-row">
+            <span class="firm-label">{{ item.firm }}</span>
+            <div class="bar-wrap">
+                <div class="bar-fill"
+                     style="width: {{ (item.cnt / max_cnt * 100) | int }}%"></div>
+            </div>
+            <span class="bar-count">{{ item.cnt }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
