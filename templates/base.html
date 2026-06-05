@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}리서치 대시보드{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-inner">
+        <a href="/" class="nav-brand">📈 리서치 레포트 대시보드</a>
+        <div class="nav-links">
+            <a href="/" class="{% if request.path == '/' %}active{% endif %}">홈</a>
+            <a href="/search" class="{% if request.path == '/search' %}active{% endif %}">검색</a>
+            <a href="/briefing" class="{% if request.path == '/briefing' %}active{% endif %}">오늘 브리핑</a>
+        </div>
+        <button id="crawlBtn" class="btn-crawl" onclick="triggerCrawl()">
+            🔄 지금 수집
+        </button>
+    </div>
+</nav>
+
+<main class="main-content">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+    <p>리서치 레포트 대시보드 · 매일 오전 9시 자동 수집</p>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
