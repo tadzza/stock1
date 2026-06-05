@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}검색 — {{ keyword }}{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h2>🔍 종목명 검색</h2>
+    <form method="GET" action="/search" class="filter-form" style="margin-top:14px;">
+        <div class="filter-group">
+            <label>종목명 또는 키워드</label>
+            <input type="text" name="q" value="{{ keyword }}"
+                   placeholder="삼성전자, 반도체, SK하이닉스 ..."
+                   class="input-text" style="width:300px;">
+        </div>
+        <button type="submit" class="btn-primary">검색</button>
+        <a href="/search" class="btn-secondary">초기화</a>
+    </form>
+</section>
+
+{% if keyword %}
+<section class="table-section card">
+    <div class="table-header">
+        <h2>
+            "{{ keyword }}" 검색 결과
+            <span class="badge-count">{{ total }}건</span>
+        </h2>
+    </div>
+
+    {% if reports %}
+    <div class="table-wrapper">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>종목명</th>
+                    <th>레포트 제목</th>
+                    <th>증권사</th>
+                    <th>투자의견</th>
+                    <th>목표주가</th>
+                    <th>발행일</th>
+                    <th>원문</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reports %}
+                <tr>
+                    <td class="td-stock">{{ r.stock_name }}</td>
+                    <td class="td-title">{{ r.title }}</td>
+                    <td class="td-firm">
+                        <span class="firm-tag">{{ r.firm }}</span>
+                    </td>
+                    <td>
+                        {% if r.opinion %}
+                            {% if '매수' in r.opinion or 'BUY' in r.opinion %}
+                                <span class="opinion buy">{{ r.opinion }}</span>
+                            {% elif '중립' in r.opinion %}
+                                <span class="opinion hold">{{ r.opinion }}</span>
+                            {% else %}
+                                <span class="opinion neutral">{{ r.opinion }}</span>
+                            {% endif %}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="td-price">{{ r.target_price or '—' }}</td>
+                    <td class="td-date">{{ r.pub_date }}</td>
+                    <td>
+                        {% if r.download_url %}
+                            <a href="{{ r.download_url }}" target="_blank"
+                               class="link-download" rel="noopener">📄</a>
+                        {% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="?page={{ current_page - 1 }}&q={{ keyword }}"
+               class="page-btn">‹ 이전</a>
+        {% endif %}
+        {% for p in range([1, current_page - 2] | max,
+                          [total_pages + 1, current_page + 3] | min) %}
+            <a href="?page={{ p }}&q={{ keyword }}"
+               class="page-btn {% if p == current_page %}active{% endif %}">{{ p }}</a>
+        {% endfor %}
+        {% if current_page < total_pages %}
+            <a href="?page={{ current_page + 1 }}&q={{ keyword }}"
+               class="page-btn">다음 ›</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <p>📭 "{{ keyword }}" 에 해당하는 레포트가 없습니다.</p>
+        <p><small>최근 90일 이내 데이터를 검색합니다.</small></p>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}
