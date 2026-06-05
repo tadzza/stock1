@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}오늘의 리서치 브리핑{% endblock %}
+
+{% block content %}
+<section class="briefing-header card">
+    <h1>📊 오늘의 리서치 레포트 브리핑</h1>
+    <p class="briefing-meta">
+        총 <strong>{{ reports | length }}건</strong> ·
+        <strong>{{ firms | length }}개</strong> 증권사
+    </p>
+</section>
+
+{% if firms %}
+    {% for firm_name, firm_reports in firms.items() %}
+    <section class="firm-section card">
+        <h3>🏢 {{ firm_name }}
+            <span class="badge-count">{{ firm_reports | length }}건</span>
+        </h3>
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>종목명</th>
+                    <th>레포트 제목</th>
+                    <th>투자의견</th>
+                    <th>목표주가</th>
+                    <th>원문</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in firm_reports %}
+                <tr>
+                    <td class="td-stock">{{ r.stock_name }}</td>
+                    <td class="td-title">{{ r.title }}</td>
+                    <td>
+                        {% if r.opinion %}
+                            {% if '매수' in r.opinion or 'BUY' in r.opinion %}
+                                <span class="opinion buy">{{ r.opinion }}</span>
+                            {% elif '중립' in r.opinion %}
+                                <span class="opinion hold">{{ r.opinion }}</span>
+                            {% else %}
+                                <span class="opinion neutral">{{ r.opinion }}</span>
+                            {% endif %}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="td-price">{{ r.target_price or '—' }}</td>
+                    <td>
+                        {% if r.download_url %}
+                            <a href="{{ r.download_url }}" target="_blank"
+                               class="link-download" rel="noopener">📄 원문</a>
+                        {% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endfor %}
+{% else %}
+    <div class="empty-state card">
+        <p>📭 오늘 수집된 레포트가 없습니다.</p>
+        <p><small>상단의 🔄 지금 수집 버튼을 눌러 데이터를 수집하세요.</small></p>
+    </div>
+{% endif %}
+{% endblock %}
